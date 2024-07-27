@@ -1,30 +1,24 @@
-# React + TypeScript + Vite
+编译用的 @babel/standalone，这个是 babel 的浏览器版本,可以对代码进行编译。
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+但是我们可能会 import 一些包 但是这在浏览器环境里是没有的
 
-Currently, two official plugins are available:
+可以使用 URL.createObjectURL 创建一个引用
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react/README.md) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+`const url = URL.createObjectURL(new Blob([code],{type:"application/javascript"}))`
 
-## Expanding the ESLint configuration
-
-If you are developing a production application, we recommend updating the configuration to enable type aware lint rules:
-
-- Configure the top-level `parserOptions` property like this:
+然后通过 babel 插件 把路径指向的文件进行替换
 
 ```js
-export default {
-  // other rules...
-  parserOptions: {
-    ecmaVersion: 'latest',
-    sourceType: 'module',
-    project: ['./tsconfig.json', './tsconfig.node.json', './tsconfig.app.json'],
-    tsconfigRootDir: __dirname,
+const transformImportSourcePlugin: PluginObj = {
+  visitor: {
+    ImportDeclaration(path) {
+      path.node.source.value = url;
+    },
   },
-}
+};
+const res = transform(code, {
+  presets: ["react", "typescript"],
+  filename: "xxx.ts",
+  plugins: [transformImportSourcePlugin],
+});
 ```
-
-- Replace `plugin:@typescript-eslint/recommended` to `plugin:@typescript-eslint/recommended-type-checked` or `plugin:@typescript-eslint/strict-type-checked`
-- Optionally add `plugin:@typescript-eslint/stylistic-type-checked`
-- Install [eslint-plugin-react](https://github.com/jsx-eslint/eslint-plugin-react) and add `plugin:react/recommended` & `plugin:react/jsx-runtime` to the `extends` list
